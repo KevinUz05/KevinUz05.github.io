@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Rendimiento Estudiantil</title>
+    <!-- Tailwind CSS CDN para un diseño moderno y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 min-h-screen">
+
+    <!-- BARRA DE NAVEGACIÓN -->
+    <header class="bg-indigo-900 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-brain text-3xl text-indigo-300"></i>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">StudentPredictor AI</h1>
+                    <p class="text-xs text-indigo-200">Regresión Lineal + FastAPI + MongoDB Atlas</p>
+                </div>
+            </div>
+            <nav class="flex gap-2 bg-indigo-950/50 p-1 rounded-lg">
+                <button id="tab-predict-btn" onclick="switchTab('predict')" class="px-4 py-2 rounded-md text-sm font-medium transition-all bg-indigo-600 text-white shadow-sm">
+                    <i class="fa-solid fa-calculator mr-2"></i>Predicción
+                </button>
+                <button id="tab-history-btn" onclick="switchTab('history')" class="px-4 py-2 rounded-md text-sm font-medium transition-all text-indigo-200 hover:text-white hover:bg-indigo-800/50">
+                    <i class="fa-solid fa-list-check mr-2"></i>Historial (CRUD)
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- SECCIÓN 1: FORMULARIO Y PREDICCIÓN -->
+        <section id="section-predict" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- COLUMNA FORMULARIO (Ocupa 2 de 3 columnas en pantallas grandes) -->
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="border-b border-slate-100 pb-4 mb-6">
+                        <h2 class="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-user-plus text-indigo-600"></i>
+                            Datos del Estudiante
+                        </h2>
+                        <p class="text-sm text-slate-500">Introduce los hábitos diarios del alumno para estimar sus Notas Internas.</p>
+                    </div>
+
+                    <form id="student-form" onsubmit="handlePredictSubmit(event)" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                            <!-- Edad -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Edad</label>
+                                <input type="number" name="Age" required min="15" max="100" value="21" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50 text-sm">
+                            </div>
+
+                            <!-- Carrera / Branch -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Carrera (Branch)</label>
+                                <select name="Branch" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50 text-sm">
+                                    <option value="CSE">Ciencias de la Computación (CSE)</option>
+                                    <option value="IT">Tecnologías de la Información (IT)</option>
+                                    <option value="ECE">Electrónica y Comunicaciones (ECE)</option>
+                                    <option value="Electrical">Ingeniería Eléctrica</option>
+                                    <option value="Mechanical">Ingeniería Mecánica</option>
+                                    <option value="Civil">Ingeniería Civil</option>
+                                </select>
+                            </div>
+
+                            <!-- Horas de Estudio diarias -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Horas de Estudio / Día</label>
+                                <input type="number" step="0.1" name="Study_Hours_per_Day" required min="0" max="24" value="4.5" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50 text-sm">
+                            </div>
+
+                            <!-- Horas de Sueño -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Horas de Sueño / Noche</label>
+                                <input type="number" step="0.1" name="Sleep_Hours" required min="0" max="24" value="7.0" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50 text-sm">
+                            </div>
+
+                            <!-- Tiempo de pantalla -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Tiempo de Pantalla (Horas/Día)</label>
+                                <input type="number" step="0.1" name="Screen_Time_Hours" required min="0" max="24" value="3.5" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50 text-sm">
+                            </div>
+
+                            <!-- Horas de Gimnasio semanales -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Gimnasio (Horas / Semana)</label>
+                                <input type="number" step="0.1" name="Gym_Hours_per_Week" required min="0" max="168" value="3.0" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50 text-sm">
+                            </div>
+
+                            <!-- Tipo de Dieta -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Tipo de Dieta</label>
+                                <select name="Diet_Type" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50 text-sm">
+                                    <option value="Veg">Vegetariana (Veg)</option>
+                                    <option value="Non-Veg">No Vegetariana (Non-Veg)</option>
+                                </select>
+                            </div>
+
+                            <!-- Porcentaje de Asistencia -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Porcentaje de Asistencia (%)</label>
+                                <input type="number" step="0.1" name="Attendance_Percentage" required min="0" max="100" value="85.0" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50 text-sm">
+                            </div>
+
+                            <!-- Nivel de Estrés -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Nivel de Estrés (1 al 10)</label>
+                                <input type="number" name="Stress_Level_1_to_10" required min="1" max="10" value="5" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50 text-sm">
+                            </div>
+
+                            <!-- Residencia -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Residencia</label>
+                                <select name="Residence" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50 text-sm">
+                                    <option value="Hosteller">Foráneo / Residencia (Hosteller)</option>
+                                    <option value="Day Scholar">Local / Casa (Day Scholar)</option>
+                                </select>
+                            </div>
+
+                            <!-- CGPA -->
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1 bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded inline-block font-bold">CGPA (Calificación Acumulada Actual)</label>
+                                <input type="number" step="0.01" name="CGPA" required min="0" max="10" value="7.8" class="w-full px-3 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50/30 font-semibold text-sm text-amber-900">
+                            </div>
+
+                        </div>
+
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow transition-colors flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            Registrar Alumno y Calcular Predicción
+                        </button>
+                    </form>
+                </div>
+
+                <!-- COLUMNA RESULTADO (Ocupa 1 de 3 columnas) -->
+                <div class="flex flex-col gap-6">
+                    <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-xl shadow-xl p-6 flex flex-col justify-between min-h-[320px] relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 text-indigo-800/30 text-9xl font-bold font-mono select-none">
+                            AI
+                        </div>
+                        
+                        <div>
+                            <span class="bg-indigo-500/30 text-indigo-300 border border-indigo-500/20 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
+                                Predicción en Tiempo Real
+                            </span>
+                            <h3 class="text-xl font-medium mt-4 text-indigo-100">Notas Internas Estimadas</h3>
+                            <p class="text-xs text-indigo-200/70 mt-1">Calculado instantáneamente a través de tu modelo de Regresión Lineal.</p>
+                        </div>
+
+                        <div class="my-6 text-center z-10">
+                            <div id="prediction-output" class="text-6xl font-black tracking-tight text-white">- -</div>
+                            <div class="text-sm text-indigo-300 mt-2 font-medium">Puntos sobre 100</div>
+                        </div>
+
+                        <div id="result-status-card" class="bg-indigo-950/40 border border-indigo-800/30 rounded-lg p-3 text-xs text-indigo-200/90 flex items-center gap-3">
+                            <i class="fa-solid fa-circle-info text-indigo-400 text-base"></i>
+                            <span id="status-text">Completa el formulario de la izquierda y haz clic en el botón para evaluar al alumno.</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta informativa de MongoDB -->
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex gap-4 items-start shadow-sm">
+                        <div class="bg-emerald-600 text-white p-2.5 rounded-lg shadow-sm">
+                            <i class="fa-solid fa-database text-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-emerald-900 text-sm">Persistencia en Atlas</h4>
+                            <p class="text-xs text-emerald-700 mt-0.5 leading-relaxed">Cada predicción exitosa almacena de forma íntegra el perfil académico del alumno junto con su estimación en la nube.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: HISTORIAL (CRUD) -->
+        <section id="section-history" class="hidden space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-table-list text-indigo-600"></i>
+                            Estudiantes Registrados en la Base de Datos
+                        </h2>
+                        <p class="text-sm text-slate-500">Consulta, analiza y elimina registros almacenados en tu clúster de MongoDB Atlas.</p>
+                    </div>
+                    <button onclick="fetchStudentsHistory()" class="px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-semibold rounded-lg shadow-sm border border-slate-200 transition-colors flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrows-rotate"></i> Actualizar Tabla
+                    </button>
+                </div>
+
+                <!-- TABLA DE DATOS RESPONSIVA -->
+                <div class="overflow-x-auto rounded-lg border border-slate-200">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider">
+                                <th class="p-3">Carrera</th>
+                                <th class="p-3 text-center">Edad</th>
+                                <th class="p-3 text-center">Estudio (H)</th>
+                                <th class="p-3 text-center">Sueño (H)</th>
+                                <th class="p-3 text-center">Asistencia (%)</th>
+                                <th class="p-3 text-center">Estrés</th>
+                                <th class="p-3 text-center">CGPA</th>
+                                <th class="p-3 text-center bg-indigo-50 text-indigo-900 font-extrabold">Predicción Internal</th>
+                                <th class="p-3 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body" class="text-sm divide-y divide-slate-100">
+                            <!-- Filas dinámicas añadidas por JS -->
+                            <tr>
+                                <td colspan="9" class="p-8 text-center text-slate-400">
+                                    <i class="fa-solid fa-spinner fa-spin text-xl text-indigo-500 mb-2 block"></i>
+                                    Cargando registros desde Atlas...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- NOTIFICACIONES TOAST -->
+    <div id="toast" class="fixed bottom-5 right-5 p-4 rounded-lg shadow-lg text-white font-medium flex items-center gap-3 transition-all duration-300 opacity-0 pointer-events-none translate-y-2 z-50">
+        <i id="toast-icon" class="fa-solid"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- LOGICA FRONTEND EN JAVASCRIPT -->
+    <script>
+        const API_URL = "http://127.0.0.1:8000/students/";
+
+        // 1. MANEJO DE PESTAÑAS (TABS)
+        function switchTab(tab) {
+            const btnPredict = document.getElementById('tab-predict-btn');
+            const btnHistory = document.getElementById('tab-history-btn');
+            const secPredict = document.getElementById('section-predict');
+            const secHistory = document.getElementById('section-history');
+
+            if (tab === 'predict') {
+                btnPredict.className = "px-4 py-2 rounded-md text-sm font-medium transition-all bg-indigo-600 text-white shadow-sm";
+                btnHistory.className = "px-4 py-2 rounded-md text-sm font-medium transition-all text-indigo-200 hover:text-white hover:bg-indigo-800/50";
+                secPredict.classList.remove('hidden');
+                secHistory.classList.add('hidden');
+            } else {
+                btnHistory.className = "px-4 py-2 rounded-md text-sm font-medium transition-all bg-indigo-600 text-white shadow-sm";
+                btnPredict.className = "px-4 py-2 rounded-md text-sm font-medium transition-all text-indigo-200 hover:text-white hover:bg-indigo-800/50";
+                secPredict.classList.add('hidden');
+                secHistory.classList.remove('hidden');
+                fetchStudentsHistory(); // Cargar la tabla automáticamente al hacer clic
+            }
+        }
+
+        // 2. MOSTRAR TOAST (ALERTAS FLOTANTES)
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-message');
+
+            msg.innerText = message;
+            if (type === 'success') {
+                toast.className = "fixed bottom-5 right-5 p-4 rounded-lg shadow-lg text-white font-medium flex items-center gap-3 transition-all duration-300 bg-emerald-600 opacity-100 translate-y-0 z-50";
+                icon.className = "fa-solid fa-circle-check";
+            } else {
+                toast.className = "fixed bottom-5 right-5 p-4 rounded-lg shadow-lg text-white font-medium flex items-center gap-3 transition-all duration-300 bg-rose-600 opacity-100 translate-y-0 z-50";
+                icon.className = "fa-solid fa-triangle-exclamation";
+            }
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 4000);
+        }
+
+        // 3. ENVÍO DEL FORMULARIO Y PETICIÓN POST
+        async function handlePredictSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            // Construimos el JSON respetando los tipos de datos numéricos esperados por FastAPI
+            const payload = {
+                Age: parseInt(formData.get('Age')),
+                Branch: formData.get('Branch'),
+                Study_Hours_per_Day: parseFloat(formData.get('Study_Hours_per_Day')),
+                Sleep_Hours: parseFloat(formData.get('Sleep_Hours')),
+                Screen_Time_Hours: parseFloat(formData.get('Screen_Time_Hours')),
+                Gym_Hours_per_Week: parseFloat(formData.get('Gym_Hours_per_Week')),
+                Diet_Type: formData.get('Diet_Type'),
+                Attendance_Percentage: parseFloat(formData.get('Attendance_Percentage')),
+                Stress_Level_1_to_10: parseInt(formData.get('Stress_Level_1_to_10')),
+                Residence: formData.get('Residence'),
+                CGPA: parseFloat(formData.get('CGPA'))
+            };
+
+            const outputEl = document.getElementById('prediction-output');
+            const statusTextEl = document.getElementById('status-text');
+            
+            outputEl.innerText = "...";
+            outputEl.classList.add('animate-pulse');
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.detail || "Error desconocido al predecir");
+                }
+
+                // Éxito: Mostrar predicción en la tarjeta
+                outputEl.innerText = result.predicted_internal_marks;
+                outputEl.classList.remove('animate-pulse');
+                
+                statusTextEl.innerHTML = `<strong>Éxito:</strong> Alumno guardado en Atlas con ID <code class="bg-indigo-950 p-1 rounded font-mono text-[10px]">${result.student_id}</code>.`;
+                showToast("¡Predicción calculada y guardada con éxito!");
+                form.reset(); // Limpiar formulario
+
+            } catch (error) {
+                console.error(error);
+                outputEl.innerText = "Error";
+                outputEl.classList.remove('animate-pulse');
+                statusTextEl.innerText = `Ocurrió un problema: ${error.message}`;
+                showToast(error.message, 'error');
+            }
+        }
+
+        // 4. CONSULTAR TODOS LOS ESTUDIANTES (GET)
+        async function fetchStudentsHistory() {
+            const tableBody = document.getElementById('history-table-body');
+            
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error("No se pudo obtener el historial.");
+                
+                const students = await response.json();
+                
+                if (students.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="p-6 text-center text-slate-400 italic">
+                                No hay estudiantes registrados en la base de datos aún.
+                            </td>
+                        </tr>`;
+                    return;
+                }
+
+                tableBody.innerHTML = students.map(student => `
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="p-3 font-medium text-slate-900">${student.Branch}</td>
+                        <td class="p-3 text-center text-slate-600">${student.Age}</td>
+                        <td class="p-3 text-center text-slate-600">${student.Study_Hours_per_Day} h</td>
+                        <td class="p-3 text-center text-slate-600">${student.Sleep_Hours} h</td>
+                        <td class="p-3 text-center text-slate-600">${student.Attendance_Percentage}%</td>
+                        <td class="p-3 text-center">
+                            <span class="px-1.5 py-0.5 rounded text-xs ${student.Stress_Level_1_to_10 > 7 ? 'bg-rose-100 text-rose-800 font-bold' : 'bg-slate-100 text-slate-700'}">
+                                ${student.Stress_Level_1_to_10}/10
+                            </span>
+                        </td>
+                        <td class="p-3 text-center font-semibold text-amber-700">${student.CGPA}</td>
+                        <td class="p-3 text-center bg-indigo-50/50 font-bold text-indigo-700 text-base">${student.Predicted_Internal_Marks}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="deleteStudent('${student._id}')" class="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors" title="Eliminar Alumno">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error(error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="p-6 text-center text-rose-600 bg-rose-50 font-medium">
+                            <i class="fa-solid fa-circle-exclamation mr-1"></i> Error al conectar con FastAPI: ${error.message}
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        // 5. ELIMINAR UN ESTUDIANTE (DELETE)
+        async function deleteStudent(id) {
+            if (!confirm("¿Estás seguro de que deseas eliminar permanentemente este registro de la base de datos?")) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}${id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.detail || "No se pudo borrar el estudiante");
+
+                showToast("Registro eliminado correctamente");
+                fetchStudentsHistory(); // Recargar tabla
+
+            } catch (error) {
+                console.error(error);
+                showToast(error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
